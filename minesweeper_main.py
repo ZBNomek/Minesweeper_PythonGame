@@ -1,157 +1,111 @@
-from random import choice
+from libreria_minesweeper.matrices import *
+from libreria_minesweeper.minas_banderas import *
+from libreria_minesweeper.checkers import *
+from libreria_minesweeper.ascii import *
 
 
-h = 10 ,10
-m = 10
+def dificultad_datos(x: int):
+    h: tuple
+    m: int
+    if x == 1:
+        h = 5
+        m = 6
+    elif x == 2:
+        h = 10
+        m = 24
+    elif x == 3:
+        h = 15
+        m = 54
+    return h, m
 
 
-def print_matriz(matriz: list) -> None:
-    print('\n'.join([' '.join([str(cell) for cell in row])
-          for row in matriz]))
-
-def crear_matriz(x:int,y:int,symbol) -> list:
-    matriz = []
-    for e in range(y):
-        a = []
-        for i in range(x):
-            a.append(symbol)
-        matriz.append(a)
+def crear_matriz_invisible(h):
+    matriz: list = crear_matriz(h[0], h[0], 0)
+    matriz = apply_mines(h[1], matriz)
+    matriz = number_mines_in_area(matriz)
     return matriz
 
-def apply_mines(number_of_mines: int, array: list) -> list:
+
+def crear_matriz_visible(h):
+    matriz: list = crear_matriz(h[0], h[0], "□")
+    return matriz
+
+
+def game_layout(matriz_vis: list, mode: str, b: int):
+    print_matriz(matriz_vis)
     n = 0
-    while number_of_mines > n:
-        coordenada = choice([[i, j]for i, x in enumerate(array[:-1])
-                         for j, y in enumerate(x[:-1])if not y])
-        array[coordenada[0]][coordenada[1]] = "m"
-        n += 1
-    return array
-
-def number_mines_in_area(array: list):
-    coordinates_for_numbers = []
-    mine_coordinates = [(y, x)for y, i in enumerate(
-        array)for x, e in enumerate(i) if e == "m"]
-    for i in mine_coordinates:
-        set_of_coordinates = []
-        # Arriba
-        y = i[0]+1
-        x = i[1]
-        if y >= 0 and x >= 0:
-            if (y, x) not in mine_coordinates:
-                set_of_coordinates.append((y, x))
-        y = i[0]+1
-        x = i[1]+1
-        if y >= 0 and x >= 0:
-            if (y, x) not in mine_coordinates:
-                set_of_coordinates.append((y, x))
-        y = i[0]+1
-        x = i[1]-1
-        if y >= 0 and x >= 0:
-            if (y, x) not in mine_coordinates:
-                set_of_coordinates.append((y, x))
-        # Abajo
-        y = i[0]-1
-        x = i[1]
-        if y >= 0 and x >= 0:
-            if (y, x) not in mine_coordinates:
-                set_of_coordinates.append((y, x))
-        y = i[0]-1
-        x = i[1]+1
-        if y >= 0 and x >= 0:
-            if (y, x) not in mine_coordinates:
-                set_of_coordinates.append((y, x))
-        y = i[0]-1
-        x = i[1]-1
-        if y >= 0 and x >= 0:
-            if (y, x) not in mine_coordinates:
-                set_of_coordinates.append((y, x))
-        # Derecha
-        y = i[0]
-        x = i[1]+1
-        if y >= 0 and x >= 0:
-            if (y, x) not in mine_coordinates:
-                set_of_coordinates.append((y, x))
-        # Izquerda
-        y = i[0]
-        x = i[1]-1
-        if y >= 0 and x >= 0:
-            if (y, x) not in mine_coordinates:
-                set_of_coordinates.append((y, x))
-
-        coordinates_for_numbers.append(set_of_coordinates)
-    for i in coordinates_for_numbers:
+    for i in matriz_vis:
         for e in i:
-            try:
-                array[e[0]][e[1]] += 1
-            except:
-                TypeError
-    return array
+            if e == "f":
+                b -= 1
+            elif e == "□":
+                n += 1
+    print("Modo actual =", mode, "   |   ", "Cuadros Faltantes",
+          n, "   |   ", "Banderas colocadas", b)
 
-def flag_visible_map(x, y, array):
-    try:
-        if array[y][x] == "□":
-            array[y][x] = "🏳"
-        elif array[y][x] == "🏳":
-            array[y][x] = "□"
-        elif array[y][x] == " ":
-            print("coordinate out of range")
-        else:
-            print("not valid")
-    except:
-        IndexError
-        print("coordinate out of range")
 
-    return array
+def game_over_layout(matriz):
+    print_matriz(matriz)
+    game_over()
 
-def switch_game_mode(current_mode, mode_1, mode_2):
-    if current_mode == mode_1:
-        current_mode = mode_2
+
+def main():
+    menu_dificultades()
+    h = []
+    difficultad = checker_options(
+        ("1", "2", "3", "h"), "str", "Type 1, 2, 3 or h -> ")
+
+    if difficultad == "h":
+        help_menu()
+
     else:
-        current_mode = mode_1
-    return current_mode
+        h = dificultad_datos(int(difficultad))
 
-matriz_invisible = crear_matriz(h[0],h[1],0)
-matriz_invisible = apply_mines(10,matriz_invisible)
-matriz_invisible = number_mines_in_area(matriz_invisible)
+        matriz_invisible = crear_matriz_invisible(h)
+        matriz_visible = crear_matriz_visible(h)
 
-matriz_visible = crear_matriz(h[0],h[1],"□")
+        breaker = False
+        game_mode = "Bandera"
 
-breaker = False
-game_mode = "flag"
+        while True:
+            game_mode = switch_game_mode(game_mode, "Bandera", "Cavar")
+            while True:
+                game_layout(matriz_visible, game_mode, h[1])
+                x = tuple_mode_checker()
+                if x == "m":
+                    break
+                else:
+                    y = int(x[-1]) - 1
+                    x = int(x[0]) - 1
 
-while True:
-    game_mode = switch_game_mode(game_mode, "flag", "dig")
-    while True:
-        print_matriz(matriz_visible)
-        print("current mode = ",game_mode)
-        
-        x = input("x ->")
-        if x == "mode":
-            break
-        else:
-            x = int(x)
-            x -= 1
-        y = input("y ->")
-        if y == "mode":
-            break
-        else:
-            y = int(y)
-            y -= 1
-        
-        if game_mode == "flag":
-            matriz_visible = flag_visible_map(x, y, matriz_visible)
-        else:
+                if game_mode == "Bandera":
+                    matriz_visible = flag_visible_map(x, y, matriz_visible)
+                else:
 
-            if matriz_invisible[y][x] == "m":
+                    if matriz_invisible[y][x] == "¤":
+                        matriz_invisible[y][x] = "X"
 
-                matriz_invisible[y][x]= "X"
-                print_matriz(matriz_invisible)
-                print("game over")
-                breaker = True
+                        game_over_layout(matriz_invisible)
+
+                        breaker = True
+                        break
+
+                    else:
+                        matriz_visible[y][x] = str(matriz_invisible[y][x])
+
+            if breaker == True:
                 break
 
-            else:
-                matriz_visible[y][x]= matriz_invisible[y][x]
 
-    if breaker == True:
+# ___________________________________________________________________________________
+
+buscaminas_menu()
+
+while True:
+    main()
+    print("Quieres volver al menú principal? [y/n]")
+    breaker = checker_options(("y", "n"), "str", ">")
+    if breaker == "n":
         break
+
+good_bye()
