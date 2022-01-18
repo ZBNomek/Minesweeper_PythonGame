@@ -1,6 +1,6 @@
-from gc import get_referents
+from nntplib import GroupInfo
 import colorama
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 colorama.init(autoreset=True)
 
 
@@ -39,6 +39,16 @@ def crear_matriz(x: int, y: int, symbol) -> list:
 def print_matriz(grid):
 
     gridsize = len(grid[-1])
+
+    tab: str = ""
+
+    if gridsize == 5:
+        tab = ('\t' * 6) + "  "
+    elif gridsize == 10:
+        tab = ('\t' * 5)
+    elif gridsize == 15:
+        tab = ('\t' * 4)
+
     horizontal = '   ' + (4 * gridsize * '-') + '-'
 
     # Print top column letters
@@ -50,7 +60,7 @@ def print_matriz(grid):
         else:
             toplabel = toplabel + str(i+1) + '  '
 
-    print(toplabel + '\n' + horizontal)
+    print(tab+toplabel + '\n' + tab+horizontal)
 
     # Print left row numbers
 
@@ -63,7 +73,7 @@ def print_matriz(grid):
         for i in y:
             i = str(i)
             if i == "0":
-                f = Fore.BLACK
+                f = Fore.WHITE
             elif i == "1":
                 f = Fore.BLUE
             elif i == "2":
@@ -90,5 +100,10 @@ def print_matriz(grid):
                 f = Fore.BLACK
 
             row = row + ' ' + f + i + Fore.RESET + Style.NORMAL + ' |'
-        print(row + '\n' + horizontal)
+        print(tab+row + '\n' + tab+horizontal)
     print('')
+
+
+a = [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]
+
+print_matriz(a)
